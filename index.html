@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Zenchain Quiz — اختبار تعريفي</title>
+  <style>
+    :root{
+      --bg:#0b0b0b; --card:#131313; --accent1:#a0f000; --accent2:#00ff9d;
+      --text:#e9e9e9; --muted:#9aa0a6;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui, "Segoe UI", Tahoma, Arial; background:var(--bg); color:var(--text); display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px}
+    .wrap{width:100%; max-width:900px}
+    header{text-align:center;margin-bottom:12px}
+    .logo{width:110px;height:110px;object-fit:contain;margin:0 auto 8px;display:block}
+    h1{margin:6px 0;font-size:22px}
+    .lead{color:var(--muted);margin:0 0 12px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent); border-radius:12px; padding:18px; box-shadow:0 8px 30px rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.03)}
+    .center{display:flex;align-items:center;justify-content:center;flex-direction:column}
+    .btn{background:linear-gradient(90deg,var(--accent1),var(--accent2)); color:#000; border:none; padding:10px 16px; border-radius:10px; font-weight:800; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,0.5);}
+    .btn.secondary{background:transparent;color:var(--muted); border:1px solid rgba(255,255,255,0.04); padding:8px 12px;font-weight:600}
+    .meta{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+    .meta a{color:var(--accent2);text-decoration:none;font-weight:700;border:1px solid rgba(0,255,157,0.06);padding:8px 12px;border-radius:10px;background:rgba(0,255,157,0.02)}
+    .question{margin:12px 0;padding:12px;border-radius:8px;background:rgba(255,255,255,0.01);text-align:right}
+    .choices label{display:block;margin:8px 0;cursor:pointer}
+    .feedback{margin-top:8px;font-weight:700}
+    .level-box{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+    .small{font-size:13px;color:var(--muted)}
+    footer{margin-top:12px;text-align:center;color:var(--muted);font-size:13px}
+    @media(max-width:520px){.logo{width:90px;height:90px}h1{font-size:18px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="center">
+      <img src="logo.png" alt="Zenchain Logo" class="logo" />
+      <h1>Zenchain Quiz — اختبار تعريفي</h1>
+      <p class="lead">٣ مراحل • كل مرحلة ١٠ أسئلة • تصحيح فوري • شارك نتيجتك للفريق</p>
+    </header>
+
+    <main class="card">
+      <div id="startScreen" class="center">
+        <p class="small">اضغط ابدأ للانطلاق في المرحلة 1 — Good luck!</p>
+        <div style="height:14px"></div>
+        <button class="btn" id="startBtn">Start Quiz · ابدأ الاختبار</button>
+        <div class="level-box" style="margin-top:14px">
+          <div class="small">Levels: 1 (easy) • 2 (medium) • 3 (hard)</div>
+        </div>
+      </div>
+
+      <div id="quizScreen" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap">
+          <div class="small" id="levelLabel">Level 1</div>
+          <div class="small" id="progressLabel">Question 1 / 10</div>
+        </div>
+
+        <div id="questionCard" class="question" role="region" aria-live="polite">
+          <p id="qText" style="margin:0 0 8px;font-weight:700">السؤال</p>
+          <div id="choices" class="choices" ></div>
+          <div id="feedback" class="feedback"></div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center;justify-content:center;margin-top:12px;flex-wrap:wrap">
+          <button class="btn" id="nextBtn">Next · التالي</button>
+          <button class="btn secondary" id="quitBtn">Quit · انهي الاختبار</button>
+        </div>
+
+        <div class="meta">
+          <a href="https://x.com/zen_chain?t=1D5E4i9cgiyKBWyxbDmN_Q&s=09" target="_blank" rel="noopener">🐦 Twitter</a>
+          <a href="https://discord.gg/zenchain" target="_blank" rel="noopener">💬 Discord</a>
+        </div>
+      </div>
+
+      <div id="levelResult" style="display:none" class="center">
+        <h3 id="levelResultText">نتيجتك</h3>
+        <p id="levelScore" class="small"></p>
+        <div style="height:8px"></div>
+        <button class="btn" id="nextLevelBtn">Next Level · المرحلة التالية</button>
+        <button class="btn secondary" id="restartBtn">Restart · أعد الاختبار</button>
+      </div>
+
+      <div id="finalScreen" style="display:none" class="center">
+        <h2 id="finalTitle">Final Score</h2>
+        <p id="finalScore" style="font-weight:800"></p>
+        <p id="finalMessage" class="small"></p>
+        <div style="height:10px"></div>
+        <button class="btn" id="shareBtn">Copy link with score · انسخ رابط النتيجة</button>
+        <button class="btn secondary" id="finalRestart">Restart All · أعد من البداية</button>
+      </div>
+    </main>
+
+    <footer class="center"><small>Prepared by youcefgh2 — شارك هذا الرابط مع فريق Zenchain للمطالبة بالدور.</small></footer>
+  </div>
+
+<script>
+// ====== QUESTIONS SET (3 levels x 10 questions) ======
+// Each question: text, choices array, correct index
+const levels = [
+  // Level 1 - Easy (Zenchain basics)
+  [
+    {text: "What is Zenchain primarily?", choices:["A blockchain network","A social app","A payment card"], correct:0},
+    {text: "Which icon is used in Zenchain logo?", choices:["Torii Gate","Pyramid","Star"], correct:0},
+    {text: "Where does Zenchain post official updates?", choices:["Twitter","Private SMS","Old forums"], correct:0},
+    {text: "Is Zenchain associated with Unizen early support?", choices:["Yes","No","Unknown"], correct:0},
+    {text: "Is Zenchain currently on testnet (as announced)?", choices:["Yes","No","Not sure"], correct:0},
+    {text: "What is a common term for a private testing environment?", choices:["Testnet","Mainnet","Marketplace"], correct:0},
+    {text: "Zenchain's logo color features which tones?", choices:["Yellow-Green gradient","Pure blue","Red and black"], correct:0},
+    {text: "Community contributions often include:", choices:["Bug reports","Account selling","Spamming"], correct:0},
+    {text: "A Torii gate is from which culture?", choices:["Japanese","Egyptian","Greek"], correct:0},
+    {text: "The best place to ask Zenchain questions is:", choices:["Discord","Random blog comments","Unknown chats"], correct:0},
+  ],
+  // Level 2 - Medium (crypto & community)
+  [
+    {text: "What does 'testnet' let users do?", choices:["Try features without real tokens","Earn fiat","Buy NFTs"], correct:0},
+    {text: "A blockchain is best described as:", choices:["A distributed ledger","A single server","A website"], correct:0},
+    {text: "What is a common wallet type?", choices:["Hot wallet","Paper letter","Bank account"], correct:0},
+    {text: "What does 'gas' usually refer to in crypto?", choices:["Transaction fees","Fuel for cars","Server cost"], correct:0},
+    {text: "Smart contracts run on:", choices:["Blockchain","Local computer only","Email servers"], correct:0},
+    {text: "Cross-chain means:", choices:["Different blockchains communicate","One chain splits","A bitcoin fork"], correct:0},
+    {text: "Airdrops usually are:", choices:["Free token distributions","Paid downloads","Malware"], correct:0},
+    {text: "Mainnet is:", choices:["The live network","A testing stage","Offline mode"], correct:0},
+    {text: "Who should report testnet bugs?", choices:["Community testers","Hackers selling info","No one"], correct:0},
+    {text: "A DAO stands for:", choices:["Decentralized Autonomous Organization","Digital Asset Order","Data Access Object"], correct:0},
+  ],
+  // Level 3 - Hard (technical & strategy)
+  [
+    {text: "What improves blockchain scalability?", choices:["Layer-2 solutions","Deleting nodes","Using emails"], correct:0},
+    {text: "A Merkle tree is used for:", choices:["Efficient data verification","Storing images","Managing users"], correct:0},
+    {text: "Finality in blockchain means:", choices:["Transactions are irreversible","Transactions pending","Transactions cancelled"], correct:0},
+    {text: "What is a consensus algorithm?", choices:["A method nodes agree on state","A design logo","A website style"], correct:0},
+    {text: "Sharding helps by:", choices:["Splitting work across shards","Centralizing control","Increasing fees"], correct:0},
+    {text: "What is an oracle in blockchain?", choices:["A service feeding external data","A prophecy site","A wallet type"], correct:0},
+    {text: "Atomic swaps allow:", choices:["Trustless token exchange across chains","Manual transfers","Email payments"], correct:0},
+    {text: "What's a main risk in DeFi?", choices:["Smart contract bugs","Wrong password","Slow internet"], correct:0},
+    {text: "Gas optimization reduces:", choices:["Transaction cost","User count","Logo size"], correct:0},
+    {text: "Layer-1 network example:", choices:["Ethereum","Google","Twitter"], correct:0},
+  ]
+];
+
+// ====== App state ======
+let currentLevel = 0; // 0..2
+let idxInLevel = 0;   // 0..9
+let correctCountPerLevel = [0,0,0];
+let totalCorrect = 0;
+let started = false;
+
+// UI refs
+const startBtn = document.getElementById('startBtn');
+const startScreen = document.getElementById('startScreen');
+const quizScreen = document.getElementById('quizScreen');
+const levelLabel = document.getElementById('levelLabel');
+const progressLabel = document.getElementById('progressLabel');
+const qText = document.getElementById('qText');
+const choicesDiv = document.getElementById('choices');
+const feedback = document.getElementById('feedback');
+const nextBtn = document.getElementById('nextBtn');
+const quitBtn = document.getElementById('quitBtn');
+const levelResult = document.getElementById('levelResult');
+const levelResultText = document.getElementById('levelResultText');
+const levelScore = document.getElementById('levelScore');
+const nextLevelBtn = document.getElementById('nextLevelBtn');
+const restartBtn = document.getElementById('restartBtn');
+const finalScreen = document.getElementById('finalScreen');
+const finalTitle = document.getElementById('finalTitle');
+const finalScore = document.getElementById('finalScore');
+const finalMessage = document.getElementById('finalMessage');
+const shareBtn = document.getElementById('shareBtn');
+const finalRestart = document.getElementById('finalRestart');
+
+// ====== Helpers ======
+function show(el){ el.style.display = ''; }
+function hide(el){ el.style.display = 'none'; }
+
+// ====== Render question ======
+function renderQuestion(){
+  const q = levels[currentLevel][idxInLevel];
+  levelLabel.textContent = `Level ${currentLevel+1}`;
+  progressLabel.textContent = `Question ${idxInLevel+1} / ${levels[currentLevel].length}`;
+  qText.textContent = `${idxInLevel+1}. ${q.text}`;
+  feedback.textContent = '';
+  choicesDiv.innerHTML = '';
+  q.choices.forEach((ch, i) => {
+    const id = `r_${currentLevel}_${idxInLevel}_${i}`;
+    const lbl = document.createElement('label');
+    lbl.setAttribute('for', id);
+    lbl.innerHTML = `<input type="radio" name="choice" id="${id}" value="${i}"> ${ch}`;
+    choicesDiv.appendChild(lbl);
+  });
+  // autofocus first input when available
+  setTimeout(()=>{
+    const first = document.querySelector('input[name="choice"]');
+    if(first) first.focus();
+  },50);
+}
+
+// ====== Start ======
+startBtn.addEventListener('click', ()=>{
+  started = true;
+  currentLevel = 0; idxInLevel = 0;
+  correctCountPerLevel = [0,0,0]; totalCorrect = 0;
+  hide(startScreen); show(quizScreen); hide(levelResult); hide(finalScreen);
+  renderQuestion();
+});
+
+// ====== Next button logic ======
+nextBtn.addEventListener('click', ()=>{
+  const sel = document.querySelector('input[name="choice"]:checked');
+  if(!sel){ feedback.textContent = 'Please select an answer — اختر إجابة.'; return; }
+  const selected = parseInt(sel.value,10);
+  const q = levels[currentLevel][idxInLevel];
+  const isCorrect = (selected === q.correct);
+  if(isCorrect){
+    feedback.textContent = '✅ Correct — إجابة صحيحة';
+    correctCountPerLevel[currentLevel]++;
+    totalCorrect++;
+  } else {
+    feedback.textContent = '❌ Wrong — إجابة خاطئة — الإجابة الصحيحة: ' + q.choices[q.correct];
+  }
+  // disable choices after answer
+  document.querySelectorAll('input[name="choice"]').forEach(i=>i.disabled=true);
+  // if last question in level, show level result; else move to next after short delay
+  if(idxInLevel === levels[currentLevel].length - 1){
+    // show level result after 900ms to let user see feedback
+    setTimeout(()=> showLevelResult(),900);
+  } else {
+    idxInLevel++;
+    setTimeout(()=> renderQuestion(),900);
+  }
+});
+
+function showLevelResult(){
+  hide(quizScreen); show(levelResult);
+  const correct = correctCountPerLevel[currentLevel];
+  levelResultText.textContent = `Level ${currentLevel+1} Result`;
+  levelScore.textContent = `You scored ${correct} / ${levels[currentLevel].length} — نتيجتك ${correct}/${levels[currentLevel].length}`;
+  // set next button text or finish
+  if(currentLevel < levels.length - 1){
+    nextLevelBtn.textContent = 'Next Level · المرحلة التالية';
+    show(nextLevelBtn);
+  } else {
+    // last level
+    nextLevelBtn.style.display = 'none';
+  }
+}
+
+nextLevelBtn.addEventListener('click', ()=>{
+  currentLevel++;
+  idxInLevel = 0;
+  hide(levelResult); show(quizScreen); renderQuestion();
+});
+
+restartBtn.addEventListener('click', ()=>{
+  // restart same level
+  idxInLevel = 0;
+  correctCountPerLevel[currentLevel] = 0;
+  totalCorrect = correctCountPerLevel.reduce((a,b)=>a+b,0);
+  hide(levelResult); show(quizScreen); renderQuestion();
+});
+
+quitBtn.addEventListener('click', ()=>{
+  // show final screen
+  finalize();
+});
+
+function finalize(){
+  hide(startScreen); hide(quizScreen); hide(levelResult);
+  show(finalScreen);
+  finalTitle.textContent = 'Final Score — النتيجة النهائية';
+  finalScore.textContent = `${totalCorrect} / ${levels.flat().length}`;
+  const pct = Math.round((totalCorrect / levels.flat().length)*100);
+  let msg = '';
+  if(pct === 100) msg = '🎉 Perfect! You are a Zenchain Master — شارك النتيجة للفريق للمطالبة بالدور.';
+  else if(pct >= 80) msg = '👏 Great job — أداء قوي!';
+  else if(pct >= 50) msg = '👍 Good effort — يمكنك التحسن!';
+  else msg = '✨ Keep learning — جرّب مرة أخرى.';
+  finalMessage.textContent = `${msg} (${pct}%)`;
+}
+
+// Final restart
+finalRestart.addEventListener('click', ()=>{
+  hide(finalScreen); show(startScreen);
+});
+
+// Share/copy link with score
+shareBtn.addEventListener('click', ()=>{
+  const base = location.origin + location.pathname;
+  const scoreParam = `score=${totalCorrect}`;
+  const url = `${base}?${scoreParam}`;
+  navigator.clipboard.writeText(url).then(()=>{
+    alert('Link copied! Share it with Zenchain team.');
+  }).catch(()=>{ alert('Could not copy link — انسخ الرابط يدويًا: ' + url); });
+});
+
+// If user arrives with score param, show final immediately (useful when sharing)
+function checkQuery(){
+  const params = new URLSearchParams(location.search);
+  if(params.has('score')){
+    // parse score and show final screen with that value
+    totalCorrect = parseInt(params.get('score'),10) || 0;
+    hide(startScreen); hide(quizScreen); hide(levelResult);
+    show(finalScreen);
+    finalTitle.textContent = 'Shared Result';
+    finalScore.textContent = `${totalCorrect} / ${levels.flat().length}`;
+    const pct = Math.round((totalCorrect / levels.flat().length)*100);
+    finalMessage.textContent = `Shared score (${pct}%).`;
+  }
+}
+
+checkQuery();
+</script>
+</body>
+</html>
